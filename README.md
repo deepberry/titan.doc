@@ -62,7 +62,12 @@ _适用场景举例：节点 A 部署在室内，IO 接一个继电器与限位�
 
 ## 在线编程
 
-### 属性名词解释
+### 编辑节点属性
+
+<div style="display:flex;justify-content:center;vertical-align: middle;"> 
+<img alt="系统架构" src="./images/node.png" style="width:25%;display:block;"> 
+<img alt="系统架构" src="./images/node_modal.png" style="width:45%;display:block;"> 
+</div>
 
 -   **属性名**： 纯英文唯一识别 id，用于区分同一个`节点`中的其他属性，在线编程也需要使用它
 -   **属性显示名**： 任意字符，用于在 UI 上显示友好的名称
