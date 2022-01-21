@@ -64,26 +64,33 @@ _适用场景举例：节点 A 部署在室内，IO 接一个继电器与限位�
 
 ### 编辑节点属性
 
-<div style="display:flex;justify-content:center;vertical-align: middle;"> 
-<img alt="系统架构" src="./images/node.png" style="width:25%;display:block;"> 
-<img alt="系统架构" src="./images/node_modal.png" style="width:45%;display:block;"> 
+<div style="display:flex;justify-content:center;align-items:center"> 
+<img alt="节点" src="./images/node.png" style="width:17%"> 
+<img alt="节点模态窗" src="./images/node_modal.png" style="width:60%"> 
+<img alt="属性编辑窗" src="./images/node_property_modal.png" style="width:25%"> 
 </div>
 
--   **属性名**： 纯英文唯一识别 id，用于区分同一个`节点`中的其他属性，在线编程也需要使用它
+-   **属性名**： 纯英文唯一识别 id，用于区分同一个`节点`中的其他属性，在线编程需要使用它
 -   **属性显示名**： 任意字符，用于在 UI 上显示友好的名称
--   **面板展示**： 属性是否在`控制面板`中显示，若否则需打开`节点`才能看到
+-   **组件类型**： `开关`或`参数`
+-   **单位**： 用于UI友好显示
+-   **面板展示**： 属性是否在`控制面板`中显示，若否则需展开`节点`才能看到
 -   **数据持久化**： 属性值被更新时是否持久化，用于图表展示及数据的下载与分析，注：仅对能被解析为数字的值有效
 -   **允许操作**： 属性值是否可以被操作
 -   **操作回调**： 当属性允许被操作时，需要编写操作回调函数，用于控制操作的具体业务逻辑
 
 ### 属性回调函数
 
-回调函数必须符合以下形式
+回调函数签名必须为 ``` function callback(value)```
 
 ```lua
 function callback(value)
+  --调用'device'的设备中'main'脚本中的'setIO'方法，传入参数value，超时时间5S
+  --调用成功则返回true，否则返回false, 
+  --第二个返回值为setIO的返回值
+  let ret,data = device.invoke('device','main','setIO',value,5000)
   --Do something here, return true when succeed
-  return false
+  return ret
 end
 ```
 
