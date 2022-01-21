@@ -60,7 +60,18 @@ _适用场景举例：节点 A 部署在室内，IO 接一个继电器与限位�
 -   **设备**： 即通用控制器，在线编程均在`设备`中完成
 -   **属性**： 即控件，类型分为`参数`、`开关`、`按钮`，当`属性`允许操作时，需编写`回调函数`，操作属性时`回调函数`将被执行
 
-## 在线编程
+## 节点管理
+
+### 编辑节点
+<div style="display:flex;justify-content:center;align-items:center"> 
+<img alt="节点" src="./images/dashboard_pen.png" style="width:22%"> 
+<img alt="节点" src="./images/dashboard_plus.png" style="width:24.5%"> 
+<img alt="节点" src="./images/node_edit.png" style="width:25%"> 
+<img alt="节点" src="./images/node_config.png" style="width:30%"> 
+</div>
+
+-   **下载模板**： 可将当前节点的配置信息下载作为模板
+-   **上传模板**： 可将模板上传，一键配置节点，用于批量复制
 
 ### 编辑节点属性
 
@@ -81,7 +92,7 @@ _适用场景举例：节点 A 部署在室内，IO 接一个继电器与限位�
 
 ### 属性回调函数
 
-回调函数签名必须为 ``` function callback(value)```
+回调函数签名必须为 ``` function callback(value)``` </br>例：
 
 ```lua
 function callback(value)
@@ -89,13 +100,19 @@ function callback(value)
   --调用成功则返回true，否则返回false, 
   --第二个返回值为setIO的返回值
   let ret,data = device.invoke('device','main','setIO',value,5000)
-  --Do something here, return true when succeed
   return ret
 end
 ```
 
 当属性被操作时，例如：类型为`参数`的属性被修改时，value 的值即为所填参数；类型为`开关`的属性被操作时，value 的值将为'true'或'false'。注：value 一定是字符串。<br/> callback 函数返回 true 时操作成功，`节点`属性将被更新；返回 false 时操作失败，`节点`属性保持原装。<br/> 开发者需要在回调函数中编写业务逻辑，如 进行数据的运算、向`设备`下发数据或通知、修改其他`属性`等。具体操作请参考`函数库`章节
 
-### 设备脚本库
+### 设备编程
 
-在设备管理面板中可编写脚本，每一个文件都是一个独立线程，每个脚本可停止或启动，当修改脚本后，需要重新启动该脚本才会生效。 <br/> 开发者可在脚本中编写业务逻辑，如 读写 RS485 从机、进行数据运算、修改`节点`的`属性`值、调用同`节点`下的其他`设备`中的函数（跨设备联动）等。具体操作请参考`函数库`章节
+<div style="display:flex;justify-content:center;align-items:center"> 
+<img alt="节点设备" src="./images/node_device_tab.png" style="width:70%"> 
+</div>
+
+在设备管理面板中可为设备编写脚本，每一个文件都是一个独立线程，每个脚本可停止或启动，当修改脚本后，需要重新启动该脚本才会生效。注：设备的状态不会随着脚本的重启而改变，例如IO可能会维持在上一个脚本所控制的输出状态。 <br/> 开发者可在脚本中编写业务逻辑，如 读写 RS485 从机、进行数据运算、修改`节点`的`属性`值、调用同`节点`下的其他`设备`中的函数（跨设备联动）等。具体操作请参考`函数库`章节
+<div style="display:flex;justify-content:center;align-items:center"> 
+<img alt="节点设备" src="./images/device_program.png" style="width:70%"> 
+</div>
