@@ -114,5 +114,123 @@ end
 
 在设备管理面板中可为设备编写脚本，每一个文件都是一个独立线程，每个脚本可停止或启动，当修改脚本后，需要重新启动该脚本才会生效。注：设备的状态不会随着脚本的重启而改变，例如IO可能会维持在上一个脚本所控制的输出状态。 <br/> 开发者可在脚本中编写业务逻辑，如 读写 RS485 从机、进行数据运算、修改`节点`的`属性`值、调用同`节点`下的其他`设备`中的函数（跨设备联动）等。具体操作请参考`函数库`章节
 <div style="display:flex;justify-content:center;align-items:center"> 
-<img alt="节点设备" src="./images/device_program.png" style="width:70%"> 
+<img alt="节点设备" src="./images/device_program.png" style="width:85%"> 
 </div>
+
+## 函数库
+
+### lua内置函数库
+[更多使用方法可查阅Lua官方文档](https://www.lua.org/manual/5.4)
+
+```lua
+os.clock
+os.date
+os.difftime
+os.time
+
+string.byte
+string.char
+string.dump
+string.find
+string.format
+string.gmatch
+string.gsub
+string.len
+string.lower
+string.match
+string.rep
+string.reverse
+string.sub
+string.upper
+string.pack
+string.packsize
+string.unpack
+
+math.abs
+math.acos
+math.asin
+math.atan
+math.ceil
+math.cos
+math.deg
+math.exp
+math.tointeger
+math.floor
+math.fmod
+math.ult
+math.log
+math.max
+math.min
+math.modf
+math.rad
+math.sin
+math.sqrt
+math.tan
+math.type
+math.random
+math.randomseed
+math.pi
+math.huge
+math.maxinteger
+math.mininteger
+```
+
+### 扩展函数包 ```cache```
+
+#### ```cache.set(key,obj)```
+将变量存到全局缓存，可用于跨脚本传递变量，注：普通变量无法跨脚本使用
+</br>示例:
+```lua
+local obj = {a=1,b='hello'}
+cache.set('table',obj)
+```
+
+#### ```cache.get(key)```
+从全局缓存取变量，可用于跨脚本传递变量，注：普通变量无法跨脚本使用
+</br>示例:
+```lua
+local obj = cache.get('table')
+-- obj = {a=1,b='hello'}
+```
+
+### 扩展函数包 ```io```
+
+#### ```io.write(port,on)```
+控制Output引脚输出电平， port取值范围1-16，on取值范围[0,1]
+</br>示例:
+```lua
+--依次翻转16路Ouput电平
+for i=1,16 do
+  io.write(i,1)
+  system.sleep(500)
+  io.write(i,0)
+  system.sleep(500)
+end
+```
+
+#### ```cache.read(port)```
+读取Input引脚电平
+</br>示例:
+```lua
+--若检测到1号Input（按钮、微动开关）低电平，则将1号Output输出为低电平（关闭继电器）
+while(true) do
+  if(io.read(1)==0) then
+    io.write(1,0)
+  end
+end
+```
+
+### 扩展函数包 ```system```
+
+#### ```system.sleep(milliseconds)```
+当前脚本延时固定毫秒数。注：不影响其他脚本的执行。
+</br>示例:
+```lua
+--1号Output输出周期为1s的方波
+while(true) do
+  io.write(1,1)
+  system.sleep(500)
+  io.write(1,0)
+  system.sleep(500)
+end
+```
