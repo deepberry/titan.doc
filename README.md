@@ -99,7 +99,7 @@ function callback(value)
   --调用'device'的设备中'main'脚本中的'setIO'方法，传入参数value，超时时间5S
   --调用成功则返回true，否则返回false, 
   --第二个返回值为setIO的返回值
-  let ret,data = device.invoke('device','main','setIO',value,5000)
+  local ret,data = device.invoke('device','main','setIO',value,5000)
   return ret
 end
 ```
@@ -123,6 +123,8 @@ end
 [更多使用方法可查阅Lua官方文档](https://www.lua.org/manual/5.4)
 
 ```lua
+print
+
 os.clock
 os.date
 os.difftime
@@ -180,6 +182,7 @@ math.mininteger
 #### ```cache.set(key,obj)```
 将变量存到全局缓存，可用于跨脚本传递变量，注：普通变量无法跨脚本使用
 </br>示例:
+
 ```lua
 local obj = {a=1,b='hello'}
 cache.set('table',obj)
@@ -188,6 +191,7 @@ cache.set('table',obj)
 #### ```cache.get(key)```
 从全局缓存取变量，可用于跨脚本传递变量，注：普通变量无法跨脚本使用
 </br>示例:
+
 ```lua
 local obj = cache.get('table')
 -- obj = {a=1,b='hello'}
@@ -198,6 +202,7 @@ local obj = cache.get('table')
 #### ```io.write(port,on)```
 控制Output引脚输出电平， port取值范围1-16，on取值范围[0,1]
 </br>示例:
+
 ```lua
 --依次翻转16路Ouput电平
 for i=1,16 do
@@ -211,6 +216,7 @@ end
 #### ```cache.read(port)```
 读取Input引脚电平
 </br>示例:
+
 ```lua
 --若检测到1号Input（按钮、微动开关）低电平，则将1号Output输出为低电平（关闭继电器）
 while(true) do
@@ -225,6 +231,7 @@ end
 #### ```system.sleep(milliseconds)```
 当前脚本延时固定毫秒数。注：不影响其他脚本的执行。
 </br>示例:
+
 ```lua
 --1号Output输出周期为1s的方波
 while(true) do
@@ -233,4 +240,115 @@ while(true) do
   io.write(1,0)
   system.sleep(500)
 end
+```
+
+#### ```system.waitRTCInit()```
+等待服务器授时成功。由于设备自身没有初始时间，而存储的脚本一上电就会执行。所以如果脚本中需要使用定时任务，需要先等待服务器授时成功。否则定时将不符合预期
+
+#### ```system.scheduleJob(cronExp,jobFun)```
+注册定时任务，cronExp为[cron表达式](https://www.matools.com/cron)，jobFun为需要被执行的函数
+</br>示例:
+
+```lua
+--脚本的第一行，先等待授时成功
+system.waitRTCInit()
+
+function job1()
+  print('I am job1')
+end
+
+function job2()
+  print('I am job2')
+end
+
+system.scheduleJob('* * * * * *',job1)    -- 每秒执行一次job1
+system.scheduleJob('0 30 8 * * *',job1)   -- 每天早上8:30分执行一次job2
+```
+
+#### ```system.getParameter(key)```
+
+在平台中配置参数，点击立即下发后参数将被固化到设备中，通过调用此函数，可从设备中获取指定参数
+
+<div style="display:flex;justify-content:center;align-items:center"> 
+<img alt="节点设备" src="./images/node_parameter_tab.png" style="width:60%"> 
+</div>
+
+</br>示例:
+
+```lua
+local thresholdValue = system.getParameter('threshold')
+if(someValue > thresholdValue) then
+  --do something
+end
+```
+
+### 扩展函数包 ```node```
+
+#### ```node.setProperty(key,value,timeout)```
+设置面板属性中控件的值
+</br>示例:
+
+```lua
+node.setProperty('temperture','12.34')  -- 节点属性显示温度12.34
+node.setProperty('switch','true')       -- 节点属性开关显示为开
+```
+
+#### ```node.queryData(query,value)```
+设置面板属性中控件的值，query为influxdb查询语句,详细语法可参阅[官方文档](https://docs.influxdata.com/influxdb/v2.0/query-data/flux/)
+</br>示例:
+
+```lua
+--获取当前时间戳
+local now_timestamp = os.time()
+--拼接查询语句
+local query = string.format([[
+    |> range(start:%d)
+    |> filter(fn: (r) => r.propertyName == "light")
+    |> integral(unit:1m)
+    ]], now_timestamp - 10*60*1000)
+
+--通过服务器求取10分钟前至现在所有light值的积分  
+local ret,data = node.queryData(query,5000)
+print(data[1][1]._value)
+```
+
+### 扩展函数包 ```device```
+
+#### ```device.invoke(deviceAlias,scriptName,functionName,param,timeout)```
+调用其他节点的方法，deviceAlias为指定设备的别名，scriptName为脚本名，functionName为方法名，param为传入参数，timeout超时毫秒数
+</br>若远程节点的目标方法有返回值，则```device.invoke```的第二个返回值则为目标方法的返回值
+</br>示例:
+
+```lua
+--节点A中main脚本
+function sayHello(value)
+  print(value..' say hello')
+  return 'A'
+end
+```
+```lua
+--节点B中main脚本
+let ret,data = device.invoke('deviceA','main','sayHello','B',5000)
+if(ret) then
+  print(data..' reply hello')
+end
+```
+
+### 扩展函数包 ```modbus```
+
+#### ```modbus.send(channel, baudrate, txTable, rxSize, timeout)```
+使用RS485接口发送modbus指令，channel为通道号1-8，baudrate为波特率，txTable为发送的byte数组（不含2byte CRC），rxSize为期望接收的byte长度（不含2byte CRC），timeout超时毫秒数
+</br>示例:
+
+```lua
+--拼凑将要发送的数据：总线地址02，功能码03，起始寄存器地址0x0000，读取1个寄存器
+local command = {0x02 ,0x03 , 0x00,0x00 , 0x00, 0x01}
+--发送modbus指令，使用端口号1，波特率9600，预期接受5个byte，超时500ms
+--预期接收的数据应为{0x02, 0x03, 0x02, xx , xx}
+local ret,data = modbus.send(1,9600,command,5,500)
+local someValue = 0
+if(ret) then
+  someValue = data[4] << 8 + data[5]
+end
+print(someValue)
 ```
