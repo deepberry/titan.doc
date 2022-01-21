@@ -213,7 +213,7 @@ for i=1,16 do
 end
 ```
 
-#### ```cache.read(port)```
+#### ```io.read(port)```
 读取Input引脚电平
 </br>示例:
 
@@ -293,7 +293,7 @@ node.setProperty('temperture','12.34')  -- 节点属性显示温度12.34
 node.setProperty('switch','true')       -- 节点属性开关显示为开
 ```
 
-#### ```node.queryData(query,value)```
+#### ```node.queryData(query,timeout)```
 设置面板属性中控件的值，query为influxdb查询语句,详细语法可参阅[官方文档](https://docs.influxdata.com/influxdb/v2.0/query-data/flux/)
 </br>示例:
 
